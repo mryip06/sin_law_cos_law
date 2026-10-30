@@ -85,6 +85,16 @@
         </div>
       </div>
 
+      <!-- Quick Symbols Toolbar -->
+      <div class="bg-slate-900/60 rounded-2xl p-3 border border-slate-700/80 flex items-center gap-3 flex-wrap">
+        <span class="text-slate-400 font-bold text-sm">快速符號：</span>
+        <button onclick="insertSymbol('°')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-lg font-bold border border-slate-500">°</button>
+        <button onclick="insertSymbol('²')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-lg font-bold border border-slate-500">²</button>
+        <button onclick="insertSymbol('sin')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-base font-bold border border-slate-500">sin</button>
+        <button onclick="insertSymbol('cos')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-base font-bold border border-slate-500">cos</button>
+        <button onclick="insertSymbol('×')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-base font-bold border border-slate-500">×</button>
+      </div>
+
       <!-- Step 2: Equation Fill-in (Optional) -->
       <div id="step2Container" class="bg-slate-900/80 rounded-2xl p-5 border border-slate-700/80 opacity-50 pointer-events-none transition-all flex flex-col gap-3">
         <div class="flex justify-between items-center">
@@ -92,14 +102,6 @@
             <span class="bg-blue-600 text-white rounded-full w-7 h-7 inline-flex items-center justify-center text-sm">2</span>
             建立方程式 <span class="text-sm font-normal text-slate-400">（選填，可按 Enter 核對）</span>
           </h2>
-          <!-- Quick Symbols Toolbar -->
-          <div class="flex gap-2">
-            <button onclick="insertSymbol('°')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-lg font-bold border border-slate-500">°</button>
-            <button onclick="insertSymbol('²')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-lg font-bold border border-slate-500">²</button>
-            <button onclick="insertSymbol('sin(')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-base font-bold border border-slate-500">sin</button>
-            <button onclick="insertSymbol('cos(')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-base font-bold border border-slate-500">cos</button>
-            <button onclick="insertSymbol(')')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-base font-bold border border-slate-500">)</button>
-          </div>
         </div>
 
         <div id="equationInputArea" class="py-2">
@@ -118,16 +120,12 @@
       <div id="step3Container" class="bg-slate-900/80 rounded-2xl p-5 border border-slate-700/80 opacity-50 pointer-events-none transition-all flex flex-col gap-4">
         <h2 class="text-xl font-bold text-slate-200 flex items-center gap-2">
           <span class="bg-blue-600 text-white rounded-full w-7 h-7 inline-flex items-center justify-center text-sm">3</span>
-          計算最終數值（3位有效數字，可按 Enter 提交）
+          計算最終數值（3位有效數字）
         </h2>
         
         <div id="finalAnswerInputs" class="flex flex-wrap items-center gap-4">
-          <!-- JS 動態插入 -->
+          <!-- JS 動態插入，按鈕已在輸入框後面 -->
         </div>
-
-        <button onclick="checkAnswer()" id="btnSubmit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xl py-3.5 rounded-xl shadow-lg transition border border-indigo-400">
-          提交並檢查答案
-        </button>
       </div>
 
       <!-- Feedback Area -->
@@ -181,7 +179,7 @@
 
     window.onload = () => {
       katex.render("\\frac{a}{\\sin A} = \\frac{b}{\\sin B} = \\frac{c}{\\sin C}", document.getElementById('katexSineFormula'), { displayMode: true });
-      katex.render("a^2 = b^2 + c^2 - 2bc \\cos A", document.getElementById('katexCosineFormula'), { displayMode: true });
+      katex.render("a^2 = b^2 + c^2 - 2bc \\cos A \\quad \\text{或} \\quad \\cos A = \\frac{b^2 + c^2 - a^2}{2bc}", document.getElementById('katexCosineFormula'), { displayMode: true });
       generateNewQuestion();
     };
 
@@ -216,10 +214,10 @@
         document.getElementById(id).className = "btn-action bg-slate-800 hover:bg-blue-700/50 border border-slate-600 rounded-xl py-3 text-lg font-bold text-slate-200";
       });
 
-      const types = ['AAS', 'ASA', 'SAS', 'ASS'];
+      const types = ['AAS', 'ASA', 'SAS', 'ASS', 'SSS'];
       const type = types[Math.floor(Math.random() * types.length)];
       
-      let q = { type: type };
+      let q = { type: type, isAngleTarget: false };
 
       if (type === 'AAS') {
         q.A = Math.round(35 + Math.random() * 45);
@@ -259,6 +257,23 @@
         q.targetVal = q.a;
         q.method = 'COSINE';
       } 
+      else if (type === 'SSS') {
+        q.b = Math.round(6 + Math.random() * 5);
+        q.c = Math.round(6 + Math.random() * 5);
+        let minA = Math.max(2, Math.abs(q.b - q.c) + 1);
+        let maxA = q.b + q.c - 1;
+        q.a = Math.round(minA + Math.random() * (maxA - minA));
+        
+        const cosA = (q.b*q.b + q.c*q.c - q.a*q.a) / (2*q.b*q.c);
+        const exactA = radToDeg(Math.acos(cosA));
+        q.A = roundToSigFigs(exactA, 3);
+
+        q.given = { a: q.a, b: q.b, c: q.c };
+        q.target = 'A';
+        q.targetVal = q.A;
+        q.method = 'COSINE';
+        q.isAngleTarget = true;
+      }
       else if (type === 'ASS') {
         q.A = Math.round(30 + Math.random() * 35);
         q.b = Math.round(8 + Math.random() * 6);
@@ -296,6 +311,7 @@
         
         q.given = { A: q.A, b: q.b, a: q.a };
         q.target = 'B';
+        q.isAngleTarget = true;
       }
 
       currentQuestion = q;
@@ -312,12 +328,13 @@
         'AAS': '題型：AAS (角角邊)',
         'ASA': '題型：ASA (角邊角)',
         'SAS': '題型：SAS (邊角邊)',
+        'SSS': '題型：SSS (邊邊邊)',
         'ASS': '題型：ASS / SSA (邊邊角)'
       };
       typeBadge.innerText = typeNames[q.type];
 
-      if (q.target === 'B' && q.type === 'ASS') {
-        prompt.innerText = `求角 B 的度數（答案請精準保留 3 位有效數字）。`;
+      if (q.isAngleTarget) {
+        prompt.innerText = `求角 ${q.target} 的度數（答案請精準保留 3 位有效數字）。`;
       } else {
         prompt.innerText = `求未知邊 ${q.target} 的長度（答案請精準保留 3 位有效數字）。`;
       }
@@ -358,28 +375,42 @@
 
       if (selectedMethod === 'SINE') {
         eqArea.innerHTML = `
-          <div class="flex items-center justify-center gap-3 text-xl font-bold">
+          <div class="flex items-center justify-center gap-3 text-xl font-bold flex-wrap">
             <div class="flex flex-col items-center">
-              <input type="text" id="eq1" onfocus="activeInputId='eq1'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-32 text-slate-100" placeholder="例: sin 30°">
+              <input type="text" id="eq1" onfocus="activeInputId='eq1'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100" placeholder="sin(A)">
               <div class="w-full h-0.5 bg-slate-500 my-1"></div>
-              <input type="text" id="eq2" onfocus="activeInputId='eq2'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-32 text-slate-100" placeholder="例: 7">
+              <input type="text" id="eq2" onfocus="activeInputId='eq2'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100" placeholder="a">
             </div>
             <span class="text-2xl font-bold">=</span>
             <div class="flex flex-col items-center">
-              <input type="text" id="eq3" onfocus="activeInputId='eq3'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-32 text-slate-100" placeholder="例: sin B">
+              <input type="text" id="eq3" onfocus="activeInputId='eq3'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100" placeholder="sin(B)">
               <div class="w-full h-0.5 bg-slate-500 my-1"></div>
-              <input type="text" id="eq4" onfocus="activeInputId='eq4'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-32 text-slate-100" placeholder="例: 8">
+              <input type="text" id="eq4" onfocus="activeInputId='eq4'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100" placeholder="b">
             </div>
           </div>
         `;
       } else if (selectedMethod === 'COSINE') {
-        eqArea.innerHTML = `
-          <div class="flex items-center justify-center gap-2 text-xl font-bold flex-wrap">
-            <input type="text" id="eqCosLHS" onfocus="activeInputId='eqCosLHS'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-24 text-slate-100" placeholder="a²">
-            <span>=</span>
-            <input type="text" id="eqCosRHS" onfocus="activeInputId='eqCosRHS'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-80 text-slate-100" placeholder="b² + c² - 2bc cos(A)">
-          </div>
-        `;
+        if (currentQuestion.isAngleTarget) {
+          eqArea.innerHTML = `
+            <div class="flex items-center justify-center gap-3 text-xl font-bold flex-wrap">
+              <input type="text" id="eqCosAngle" onfocus="activeInputId='eqCosAngle'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-32 text-slate-100" placeholder="cos A">
+              <span class="text-2xl font-bold">=</span>
+              <div class="flex flex-col items-center">
+                <input type="text" id="eqCosNum" onfocus="activeInputId='eqCosNum'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-64 text-slate-100" placeholder="b² + c² - a²">
+                <div class="w-full h-0.5 bg-slate-500 my-1"></div>
+                <input type="text" id="eqCosDen" onfocus="activeInputId='eqCosDen'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-64 text-slate-100" placeholder="2bc">
+              </div>
+            </div>
+          `;
+        } else {
+          eqArea.innerHTML = `
+            <div class="flex items-center justify-center gap-2 text-xl font-bold flex-wrap">
+              <input type="text" id="eqCosLHS" onfocus="activeInputId='eqCosLHS'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-24 text-slate-100" placeholder="a²">
+              <span>=</span>
+              <input type="text" id="eqCosRHS" onfocus="activeInputId='eqCosRHS'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-80 text-slate-100" placeholder="b² + c² - 2bc cos(A)">
+            </div>
+          `;
+        }
       }
 
       setTimeout(() => {
@@ -390,36 +421,46 @@
         });
       }, 50);
 
+      // 步驟 3：輸入框與提交按鈕排在同一行後面
       if (currentQuestion.type === 'ASS' && selectedMethod === 'SINE') {
         finalArea.innerHTML = `
-          <div class="flex items-center gap-4 flex-wrap">
-            <label class="font-bold text-lg">答案數量：</label>
-            <select id="solCountSelect" class="bg-slate-950 border border-slate-600 rounded-xl p-2.5 text-lg font-bold">
-              <option value="1" ${currentQuestion.solutionsCount === 1 ? 'selected' : ''}>1 個解</option>
-              <option value="2" ${currentQuestion.solutionsCount === 2 ? 'selected' : ''}>2 個解</option>
-            </select>
-          </div>
-          <div id="assValueInputs" class="flex items-center gap-4 mt-2 flex-wrap">
-            <div>
-              <span class="font-bold text-lg">∠B₁ = </span>
-              <input type="number" step="any" id="ansVal1" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-36 text-slate-100" placeholder="3位有效數字"> °
+          <div class="flex items-center gap-4 flex-wrap w-full">
+            <div class="flex items-center gap-4 flex-wrap flex-1">
+              <label class="font-bold text-lg">答案數量：</label>
+              <select id="solCountSelect" class="bg-slate-950 border border-slate-600 rounded-xl p-2.5 text-lg font-bold">
+                <option value="1" ${currentQuestion.solutionsCount === 1 ? 'selected' : ''}>1 個解</option>
+                <option value="2" ${currentQuestion.solutionsCount === 2 ? 'selected' : ''}>2 個解</option>
+              </select>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-lg">∠B₁ = </span>
+                <input type="number" step="any" id="ansVal1" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-32 text-slate-100" placeholder="3位有效數字"> °
+              </div>
+              <div id="ansVal2Container" class="items-center gap-2" style="display: ${currentQuestion.solutionsCount === 2 ? 'flex' : 'none'};">
+                <span class="font-bold text-lg">∠B₂ = </span>
+                <input type="number" step="any" id="ansVal2" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-32 text-slate-100" placeholder="3位有效數字"> °
+              </div>
             </div>
-            <div id="ansVal2Container" style="display: ${currentQuestion.solutionsCount === 2 ? 'inline-block' : 'none'};">
-              <span class="font-bold text-lg">∠B₂ = </span>
-              <input type="number" step="any" id="ansVal2" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-36 text-slate-100" placeholder="3位有效數字"> °
-            </div>
+            <button onclick="checkAnswer()" id="btnSubmit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-lg py-3 px-6 rounded-xl shadow-lg transition border border-indigo-400 whitespace-nowrap">
+              提交並檢查答案
+            </button>
           </div>
         `;
 
         document.getElementById('solCountSelect').addEventListener('change', (e) => {
           const val = e.target.value;
-          document.getElementById('ansVal2Container').style.display = val === '2' ? 'inline-block' : 'none';
+          document.getElementById('ansVal2Container').style.display = val === '2' ? 'flex' : 'none';
         });
       } else {
         finalArea.innerHTML = `
-          <div class="flex items-center gap-3">
-            <span class="font-bold text-xl">${currentQuestion.target} = </span>
-            <input type="number" step="any" id="ansVal1" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-44 text-slate-100" placeholder="3位有效數字">
+          <div class="flex items-center gap-4 flex-wrap w-full justify-between">
+            <div class="flex items-center gap-3">
+              <span class="font-bold text-xl">${currentQuestion.target} = </span>
+              <input type="number" step="any" id="ansVal1" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-44 text-slate-100" placeholder="3位有效數字"> 
+              <span class="font-bold text-xl">${currentQuestion.isAngleTarget ? '°' : ''}</span>
+            </div>
+            <button onclick="checkAnswer()" id="btnSubmit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-lg py-3 px-6 rounded-xl shadow-lg transition border border-indigo-400 whitespace-nowrap">
+              提交並檢查答案
+            </button>
           </div>
         `;
       }
@@ -485,32 +526,61 @@
           fb.innerHTML = `<span class="text-amber-400">💡 提示：請檢查正弦對應比例及已知數據是否正確。</span>`;
         }
       } else if (selectedMethod === 'COSINE') {
-        const lhs = document.getElementById('eqCosLHS')?.value.trim() || '';
-        const rhs = document.getElementById('eqCosRHS')?.value.trim() || '';
+        if (q.isAngleTarget) {
+          const angleBox = document.getElementById('eqCosAngle')?.value.trim() || '';
+          const numBox = document.getElementById('eqCosNum')?.value.trim() || '';
+          const denBox = document.getElementById('eqCosDen')?.value.trim() || '';
 
-        if (!lhs && !rhs) {
-          fb.innerHTML = `<span class="text-slate-400">💡 步驟 2 為選填項目。</span>`;
-          return;
-        }
+          if (!angleBox && !numBox && !denBox) {
+            fb.innerHTML = `<span class="text-slate-400">💡 步驟 2 為選填項目。</span>`;
+            return;
+          }
 
-        if (!lhs || !rhs) {
-          fb.innerHTML = `<span class="text-rose-400">⚠️ 請完整填寫等式左右兩邊。</span>`;
-          return;
-        }
+          if (!angleBox || !numBox || !denBox) {
+            fb.innerHTML = `<span class="text-rose-400">⚠️ 若要填寫，所有格子均需填滿。</span>`;
+            return;
+          }
 
-        const allText = lhs + rhs;
-        if (/sin|cos/i.test(allText) && /\d+/.test(allText) && !/°/.test(allText)) {
-          fb.innerHTML = `<span class="text-rose-400">❌ 角度數值後方必須加上度數符號 (°)！</span>`;
-          return;
-        }
+          if (!angleBox.toLowerCase().includes('cos')) {
+            fb.innerHTML = `<span class="text-rose-400">❌ 左側請輸入 cos 函數（例如 cos A）！</span>`;
+            return;
+          }
 
-        const usedNums = [...extractNumbers(lhs), ...extractNumbers(rhs)];
-        const hasValidNum = usedNums.some(n => validNumbers.includes(n));
+          const allText = angleBox + numBox + denBox;
+          if (/sin|cos/i.test(numBox + denBox) && /\d+/.test(numBox + denBox) && !/°/.test(numBox + denBox)) {
+            fb.innerHTML = `<span class="text-rose-400">❌ 角度數值後方必須加上度數符號 (°)！</span>`;
+            return;
+          }
 
-        if (rhs.includes('cos') && (lhs.includes('²') || lhs.includes('^2') || rhs.includes('²') || rhs.includes('^2')) && hasValidNum) {
-          fb.innerHTML = `<span class="text-emerald-400">✅ 餘弦結構與數據正確！</span>`;
+          fb.innerHTML = `<span class="text-emerald-400">✅ 餘弦定理求角度結構正確！</span>`;
         } else {
-          fb.innerHTML = `<span class="text-amber-400">💡 提示：請確保包含平方 (²) 及正確的已知數據。</span>`;
+          const lhs = document.getElementById('eqCosLHS')?.value.trim() || '';
+          const rhs = document.getElementById('eqCosRHS')?.value.trim() || '';
+
+          if (!lhs && !rhs) {
+            fb.innerHTML = `<span class="text-slate-400">💡 步驟 2 為選填項目。</span>`;
+            return;
+          }
+
+          if (!lhs || !rhs) {
+            fb.innerHTML = `<span class="text-rose-400">⚠️ 請完整填寫等式左右兩邊。</span>`;
+            return;
+          }
+
+          const allText = lhs + rhs;
+          if (/sin|cos/i.test(allText) && /\d+/.test(allText) && !/°/.test(allText)) {
+            fb.innerHTML = `<span class="text-rose-400">❌ 角度數值後方必須加上度數符號 (°)！</span>`;
+            return;
+          }
+
+          const usedNums = [...extractNumbers(lhs), ...extractNumbers(rhs)];
+          const hasValidNum = usedNums.some(n => validNumbers.includes(n));
+
+          if (rhs.includes('cos') && (lhs.includes('²') || lhs.includes('^2') || rhs.includes('²') || rhs.includes('^2')) && hasValidNum) {
+            fb.innerHTML = `<span class="text-emerald-400">✅ 餘弦結構與數據正確！</span>`;
+          } else {
+            fb.innerHTML = `<span class="text-amber-400">💡 提示：請確保包含平方 (²) 及正確的已知數據。</span>`;
+          }
         }
       }
     }
@@ -529,7 +599,6 @@
         return;
       }
 
-      // 檢查數值是否精準符合 3 位有效數字
       let isValCorrect = false;
       if (q.type === 'ASS' && q.method === 'SINE') {
         const count = parseInt(document.getElementById('solCountSelect')?.value || '1');
@@ -581,6 +650,9 @@
           html += `<p>1. $\\angle B_1 \\approx ${q.B1}^\\circ$</p>`;
           html += `<p>2. $\\angle B_2 = 180^\\circ - ${q.B1}^\\circ \\approx ${q.B2}^\\circ$</p>`;
         }
+      } else if (q.method === 'COSINE' && q.isAngleTarget) {
+        html += `<p>公式算式：$\\cos ${q.target} = \\frac{b^2 + c^2 - a^2}{2bc}$</p>`;
+        html += `<p>正確答案：<strong>${q.target} = ${q.targetVal}°</strong>（3位有效數字）</p>`;
       } else if (q.method === 'SINE') {
         html += `<p>公式算式：$\\frac{${q.target}}{\\sin(\\text{對角})} = \\frac{\\text{已知邊}}{\\sin(\\text{已知角})}$</p>`;
         html += `<p>正確答案：<strong>${q.target} = ${q.targetVal}</strong>（3位有效數字）</p>`;
@@ -613,6 +685,12 @@
       let drawB = g.B || 60;
       if (q.type === 'SAS') drawB = 60;
       if (q.type === 'ASS') drawB = 55;
+      if (q.type === 'SSS') {
+        const cosA_d = (g.b*g.b + g.c*g.c - g.a*g.a)/(2*g.b*g.c);
+        drawA = radToDeg(Math.acos(Math.max(-1, Math.min(1, cosA_d))));
+        const cosB_d = (g.a*g.a + g.c*g.c - g.b*g.b)/(2*g.a*g.c);
+        drawB = radToDeg(Math.acos(Math.max(-1, Math.min(1, cosB_d))));
+      }
 
       const radA = degToRad(drawA);
       const radB = degToRad(drawB);
