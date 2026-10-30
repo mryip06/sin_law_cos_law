@@ -124,7 +124,7 @@
         </h2>
         
         <div id="finalAnswerInputs" class="flex flex-wrap items-center gap-4">
-          <!-- JS 動態插入，按鈕已在輸入框後面 -->
+          <!-- JS 動態插入 -->
         </div>
       </div>
 
@@ -377,15 +377,15 @@
         eqArea.innerHTML = `
           <div class="flex items-center justify-center gap-3 text-xl font-bold flex-wrap">
             <div class="flex flex-col items-center">
-              <input type="text" id="eq1" onfocus="activeInputId='eq1'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100" placeholder="sin(A)">
+              <input type="text" id="eq1" onfocus="activeInputId='eq1'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100">
               <div class="w-full h-0.5 bg-slate-500 my-1"></div>
-              <input type="text" id="eq2" onfocus="activeInputId='eq2'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100" placeholder="a">
+              <input type="text" id="eq2" onfocus="activeInputId='eq2'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100">
             </div>
             <span class="text-2xl font-bold">=</span>
             <div class="flex flex-col items-center">
-              <input type="text" id="eq3" onfocus="activeInputId='eq3'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100" placeholder="sin(B)">
+              <input type="text" id="eq3" onfocus="activeInputId='eq3'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100">
               <div class="w-full h-0.5 bg-slate-500 my-1"></div>
-              <input type="text" id="eq4" onfocus="activeInputId='eq4'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100" placeholder="b">
+              <input type="text" id="eq4" onfocus="activeInputId='eq4'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-28 text-slate-100">
             </div>
           </div>
         `;
@@ -393,21 +393,21 @@
         if (currentQuestion.isAngleTarget) {
           eqArea.innerHTML = `
             <div class="flex items-center justify-center gap-3 text-xl font-bold flex-wrap">
-              <input type="text" id="eqCosAngle" onfocus="activeInputId='eqCosAngle'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-32 text-slate-100" placeholder="cos A">
+              <input type="text" id="eqCosAngle" onfocus="activeInputId='eqCosAngle'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-32 text-slate-100">
               <span class="text-2xl font-bold">=</span>
               <div class="flex flex-col items-center">
-                <input type="text" id="eqCosNum" onfocus="activeInputId='eqCosNum'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-64 text-slate-100" placeholder="b² + c² - a²">
+                <input type="text" id="eqCosNum" onfocus="activeInputId='eqCosNum'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-64 text-slate-100">
                 <div class="w-full h-0.5 bg-slate-500 my-1"></div>
-                <input type="text" id="eqCosDen" onfocus="activeInputId='eqCosDen'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-64 text-slate-100" placeholder="2bc">
+                <input type="text" id="eqCosDen" onfocus="activeInputId='eqCosDen'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-64 text-slate-100">
               </div>
             </div>
           `;
         } else {
           eqArea.innerHTML = `
             <div class="flex items-center justify-center gap-2 text-xl font-bold flex-wrap">
-              <input type="text" id="eqCosLHS" onfocus="activeInputId='eqCosLHS'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-24 text-slate-100" placeholder="a²">
+              <input type="text" id="eqCosLHS" onfocus="activeInputId='eqCosLHS'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-24 text-slate-100">
               <span>=</span>
-              <input type="text" id="eqCosRHS" onfocus="activeInputId='eqCosRHS'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-80 text-slate-100" placeholder="b² + c² - 2bc cos(A)">
+              <input type="text" id="eqCosRHS" onfocus="activeInputId='eqCosRHS'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-80 text-slate-100">
             </div>
           `;
         }
@@ -421,7 +421,7 @@
         });
       }, 50);
 
-      // 步驟 3：輸入框與提交按鈕排在同一行後面
+      // 步驟 3：輸入框與提交按鈕排在同一行後面（已無 placeholder）
       if (currentQuestion.type === 'ASS' && selectedMethod === 'SINE') {
         finalArea.innerHTML = `
           <div class="flex items-center gap-4 flex-wrap w-full">
@@ -433,11 +433,11 @@
               </select>
               <div class="flex items-center gap-2">
                 <span class="font-bold text-lg">∠B₁ = </span>
-                <input type="number" step="any" id="ansVal1" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-32 text-slate-100" placeholder="3位有效數字"> °
+                <input type="number" step="any" id="ansVal1" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-32 text-slate-100"> °
               </div>
               <div id="ansVal2Container" class="items-center gap-2" style="display: ${currentQuestion.solutionsCount === 2 ? 'flex' : 'none'};">
                 <span class="font-bold text-lg">∠B₂ = </span>
-                <input type="number" step="any" id="ansVal2" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-32 text-slate-100" placeholder="3位有效數字"> °
+                <input type="number" step="any" id="ansVal2" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-32 text-slate-100"> °
               </div>
             </div>
             <button onclick="checkAnswer()" id="btnSubmit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-lg py-3 px-6 rounded-xl shadow-lg transition border border-indigo-400 whitespace-nowrap">
@@ -455,7 +455,7 @@
           <div class="flex items-center gap-4 flex-wrap w-full justify-between">
             <div class="flex items-center gap-3">
               <span class="font-bold text-xl">${currentQuestion.target} = </span>
-              <input type="number" step="any" id="ansVal1" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-44 text-slate-100" placeholder="3位有效數字"> 
+              <input type="number" step="any" id="ansVal1" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-44 text-slate-100"> 
               <span class="font-bold text-xl">${currentQuestion.isAngleTarget ? '°' : ''}</span>
             </div>
             <button onclick="checkAnswer()" id="btnSubmit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-lg py-3 px-6 rounded-xl shadow-lg transition border border-indigo-400 whitespace-nowrap">
@@ -542,7 +542,7 @@
           }
 
           if (!angleBox.toLowerCase().includes('cos')) {
-            fb.innerHTML = `<span class="text-rose-400">❌ 左側請輸入 cos 函數（例如 cos A）！</span>`;
+            fb.innerHTML = `<span class="text-rose-400">❌ 左側請輸入 cos 函數！</span>`;
             return;
           }
 
