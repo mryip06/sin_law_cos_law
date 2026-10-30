@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>解三角形大師 (Sine & Cosine Law)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- KaTeX for rendering math -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <style>
+    body { font-size: 18px; }
+    .btn-action { transition: all 0.2s ease-in-out; }
+    .btn-action:hover { transform: translateY(-1px); }
+    .input-box { font-size: 1.25rem; text-align: center; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 flex flex-col">
+
+  <!-- Header -->
+  <header class="max-w-7xl w-full mx-auto flex justify-between items-center py-3 px-6 bg-slate-800 rounded-2xl border border-slate-700 shadow-xl mb-4">
+    <div class="flex items-center gap-3">
+      <span class="text-3xl">📐</span>
+      <h1 class="text-2xl font-extrabold bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">
+        解三角形大師
+      </h1>
+    </div>
+    
+    <div class="flex items-center gap-4">
+      <div class="bg-slate-700 px-4 py-1.5 rounded-xl text-lg font-bold border border-slate-600">
+        得分：<span id="scoreDisplay" class="text-amber-400 text-xl">0</span>
+      </div>
+      <button onclick="toggleFormulaDrawer()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-xl text-lg flex items-center gap-2 border border-indigo-400 transition">
+        📖 公式速查
+      </button>
+      <button onclick="generateNewQuestion()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-5 rounded-xl text-lg transition shadow-lg">
+        🔄 換一題
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Side-by-Side Container -->
+  <main class="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
+    
+    <!-- LEFT COLUMN: Triangle Canvas Diagram -->
+    <section class="lg:col-span-5 bg-slate-800 border border-slate-700 rounded-3xl p-5 shadow-2xl flex flex-col items-center justify-between min-h-[480px]">
+      <div class="w-full flex justify-between items-center mb-3">
+        <span id="questionTypeBadge" class="bg-blue-900/60 text-blue-300 font-bold px-4 py-1.5 rounded-full border border-blue-700 text-base">
+          載入中...
+        </span>
+        <span class="text-slate-400 text-sm">示意圖（數據以標註為準）</span>
+      </div>
+
+      <!-- Canvas -->
+      <div class="relative w-full flex-1 flex items-center justify-center bg-slate-950/60 rounded-2xl border border-slate-800 p-2">
+        <canvas id="triangleCanvas" width="450" height="380" class="max-w-full h-auto"></canvas>
+      </div>
+
+      <div class="w-full text-center mt-3 text-slate-300 font-bold text-xl" id="questionPrompt">
+        請根據圖中三角形數據，求未知量。
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: Interactive Form & Steps -->
+    <section class="lg:col-span-7 bg-slate-800 border border-slate-700 rounded-3xl p-6 shadow-2xl flex flex-col gap-6">
+      
+      <!-- Step 1: Select Theorem -->
+      <div class="bg-slate-900/80 rounded-2xl p-5 border border-slate-700/80">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-xl font-bold text-slate-200 flex items-center gap-2">
+            <span class="bg-blue-600 text-white rounded-full w-7 h-7 inline-flex items-center justify-center text-sm">1</span>
+            選擇適用定理
+          </h2>
+          <span id="step1Feedback" class="text-base font-bold"></span>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <button onclick="selectMethod('SINE')" id="btnSine" class="btn-action bg-slate-800 hover:bg-blue-700/50 border border-slate-600 rounded-xl py-3 text-lg font-bold text-slate-200">
+            正弦定理 (Sine Law)
+          </button>
+          <button onclick="selectMethod('COSINE')" id="btnCosine" class="btn-action bg-slate-800 hover:bg-blue-700/50 border border-slate-600 rounded-xl py-3 text-lg font-bold text-slate-200">
+            餘弦定理 (Cosine Law)
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Equation Fill-in (Optional) -->
+      <div id="step2Container" class="bg-slate-900/80 rounded-2xl p-5 border border-slate-700/80 opacity-50 pointer-events-none transition-all flex flex-col gap-3">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-bold text-slate-200 flex items-center gap-2">
+            <span class="bg-blue-600 text-white rounded-full w-7 h-7 inline-flex items-center justify-center text-sm">2</span>
+            建立方程式 <span class="text-sm font-normal text-slate-400">（選填，可按 Enter 核對）</span>
+          </h2>
+          <!-- Quick Symbols Toolbar -->
+          <div class="flex gap-2">
+            <button onclick="insertSymbol('°')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-lg font-bold border border-slate-500">°</button>
+            <button onclick="insertSymbol('²')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-lg font-bold border border-slate-500">²</button>
+            <button onclick="insertSymbol('sin(')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-base font-bold border border-slate-500">sin</button>
+            <button onclick="insertSymbol('cos(')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-base font-bold border border-slate-500">cos</button>
+            <button onclick="insertSymbol(')')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-base font-bold border border-slate-500">)</button>
+          </div>
+        </div>
+
+        <div id="equationInputArea" class="py-2">
+          <div class="text-slate-400 text-center py-4">請先完成步驟 1 選取定理</div>
+        </div>
+
+        <div class="flex items-center justify-between mt-1">
+          <button onclick="verifyEquation()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-5 rounded-xl text-base border border-sky-400 transition">
+            🔍 核對公式建立
+          </button>
+          <span id="step2Feedback" class="text-base font-bold"></span>
+        </div>
+      </div>
+
+      <!-- Step 3: Numerical Result & Submit -->
+      <div id="step3Container" class="bg-slate-900/80 rounded-2xl p-5 border border-slate-700/80 opacity-50 pointer-events-none transition-all flex flex-col gap-4">
+        <h2 class="text-xl font-bold text-slate-200 flex items-center gap-2">
+          <span class="bg-blue-600 text-white rounded-full w-7 h-7 inline-flex items-center justify-center text-sm">3</span>
+          計算最終數值（3位有效數字，可按 Enter 提交）
+        </h2>
+        
+        <div id="finalAnswerInputs" class="flex flex-wrap items-center gap-4">
+          <!-- JS 動態插入 -->
+        </div>
+
+        <button onclick="checkAnswer()" id="btnSubmit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xl py-3.5 rounded-xl shadow-lg transition border border-indigo-400">
+          提交並檢查答案
+        </button>
+      </div>
+
+      <!-- Feedback Area -->
+      <div id="feedbackArea" class="hidden rounded-2xl p-5 border text-lg"></div>
+
+    </section>
+  </main>
+
+  <!-- Formula Side Drawer -->
+  <div id="formulaDrawer" class="fixed inset-y-0 right-0 w-80 bg-slate-800 border-l border-slate-700 shadow-2xl p-6 transition-transform transform translate-x-full z-50 overflow-y-auto">
+    <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-3">
+      <h3 class="text-xl font-bold text-slate-100">📖 公式速查</h3>
+      <button onclick="toggleFormulaDrawer()" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+    </div>
+    
+    <div class="flex flex-col gap-6 text-slate-200">
+      <div>
+        <h4 class="font-bold text-indigo-400 text-lg mb-2">正弦定理 (Sine Law)</h4>
+        <div id="katexSineFormula" class="bg-slate-900 p-3 rounded-xl border border-slate-700"></div>
+      </div>
+
+      <div>
+        <h4 class="font-bold text-indigo-400 text-lg mb-2">餘弦定理 (Cosine Law)</h4>
+        <div id="katexCosineFormula" class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex flex-col gap-2"></div>
+      </div>
+
+      <div class="text-sm text-slate-400 border-t border-slate-700 pt-3">
+        💡 提示：<br>
+        • 已知對邊對角，優先考慮正弦定理。<br>
+        • 已知三邊 (SSS) 或兩邊及其夾角 (SAS)，使用餘弦定理。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const degToRad = d => d * Math.PI / 180;
+    const radToDeg = r => r * 180 / Math.PI;
+
+    function roundToSigFigs(num, sigFigs) {
+      if (num === 0) return 0;
+      const d = Math.ceil(Math.log10(Math.abs(num)));
+      const power = sigFigs - d;
+      const magnitude = Math.pow(10, power);
+      return Math.round(num * magnitude) / magnitude;
+    }
+
+    let currentQuestion = null;
+    let selectedMethod = null;
+    let activeInputId = null;
+    let score = 0;
+
+    window.onload = () => {
+      katex.render("\\frac{a}{\\sin A} = \\frac{b}{\\sin B} = \\frac{c}{\\sin C}", document.getElementById('katexSineFormula'), { displayMode: true });
+      katex.render("a^2 = b^2 + c^2 - 2bc \\cos A", document.getElementById('katexCosineFormula'), { displayMode: true });
+      generateNewQuestion();
+    };
+
+    function toggleFormulaDrawer() {
+      const drawer = document.getElementById('formulaDrawer');
+      drawer.classList.toggle('translate-x-full');
+    }
+
+    function insertSymbol(sym) {
+      if (!activeInputId) return;
+      const input = document.getElementById(activeInputId);
+      if (!input) return;
+      
+      const start = input.selectionStart || input.value.length;
+      const end = input.selectionEnd || input.value.length;
+      const text = input.value;
+      input.value = text.substring(0, start) + sym + text.substring(end);
+      input.focus();
+      input.setSelectionRange(start + sym.length, start + sym.length);
+    }
+
+    function generateNewQuestion() {
+      selectedMethod = null;
+      document.getElementById('feedbackArea').classList.add('hidden');
+      document.getElementById('step1Feedback').innerText = '';
+      document.getElementById('step2Feedback').innerText = '';
+      
+      document.getElementById('step2Container').classList.add('opacity-50', 'pointer-events-none');
+      document.getElementById('step3Container').classList.add('opacity-50', 'pointer-events-none');
+      
+      ['btnSine', 'btnCosine'].forEach(id => {
+        document.getElementById(id).className = "btn-action bg-slate-800 hover:bg-blue-700/50 border border-slate-600 rounded-xl py-3 text-lg font-bold text-slate-200";
+      });
+
+      const types = ['AAS', 'ASA', 'SAS', 'ASS'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      
+      let q = { type: type };
+
+      if (type === 'AAS') {
+        q.A = Math.round(35 + Math.random() * 45);
+        q.B = Math.round(35 + Math.random() * 45);
+        q.C = 180 - q.A - q.B;
+        q.a = Math.round(6 + Math.random() * 10);
+        const exactB = q.a * Math.sin(degToRad(q.B)) / Math.sin(degToRad(q.A));
+        q.b = roundToSigFigs(exactB, 3);
+        
+        q.given = { A: q.A, B: q.B, C: q.C, a: q.a };
+        q.target = 'b';
+        q.targetVal = q.b;
+        q.method = 'SINE';
+      } 
+      else if (type === 'ASA') {
+        q.A = Math.round(35 + Math.random() * 40);
+        q.B = Math.round(35 + Math.random() * 40);
+        q.C = 180 - q.A - q.B;
+        q.c = Math.round(7 + Math.random() * 8);
+        const exactA = q.c * Math.sin(degToRad(q.A)) / Math.sin(degToRad(q.C));
+        q.a = roundToSigFigs(exactA, 3);
+        
+        q.given = { A: q.A, B: q.B, C: q.C, c: q.c };
+        q.target = 'a';
+        q.targetVal = q.a;
+        q.method = 'SINE';
+      } 
+      else if (type === 'SAS') {
+        q.b = Math.round(6 + Math.random() * 8);
+        q.c = Math.round(6 + Math.random() * 8);
+        q.A = Math.round(40 + Math.random() * 50);
+        const exactA = Math.sqrt(q.b*q.b + q.c*q.c - 2*q.b*q.c*Math.cos(degToRad(q.A)));
+        q.a = roundToSigFigs(exactA, 3);
+        
+        q.given = { b: q.b, c: q.c, A: q.A };
+        q.target = 'a';
+        q.targetVal = q.a;
+        q.method = 'COSINE';
+      } 
+      else if (type === 'ASS') {
+        q.A = Math.round(30 + Math.random() * 35);
+        q.b = Math.round(8 + Math.random() * 6);
+        const h = q.b * Math.sin(degToRad(q.A));
+        
+        const scenario = Math.random();
+        if (scenario < 0.5) {
+          let minA = Math.ceil(h + 0.1);
+          let maxA = q.b - 1;
+          if (maxA >= minA) {
+            q.a = Math.floor(Math.random() * (maxA - minA + 1)) + minA;
+            q.solutionsCount = 2;
+            q.method = 'SINE';
+            const sinB = q.b * Math.sin(degToRad(q.A)) / q.a;
+            q.exactB1 = radToDeg(Math.asin(sinB));
+            q.exactB2 = 180 - q.exactB1;
+            q.B1 = roundToSigFigs(q.exactB1, 3);
+            q.B2 = roundToSigFigs(q.exactB2, 3);
+          } else {
+            q.a = q.b + Math.floor(Math.random() * 4);
+            q.solutionsCount = 1;
+            q.method = 'SINE';
+            const sinB = q.b * Math.sin(degToRad(q.A)) / q.a;
+            q.exactB1 = radToDeg(Math.asin(sinB));
+            q.B1 = roundToSigFigs(q.exactB1, 3);
+          }
+        } else {
+          q.a = q.b + Math.floor(Math.random() * 5);
+          q.solutionsCount = 1;
+          q.method = 'SINE';
+          const sinB = q.b * Math.sin(degToRad(q.A)) / q.a;
+          q.exactB1 = radToDeg(Math.asin(sinB));
+          q.B1 = roundToSigFigs(q.exactB1, 3);
+        }
+        
+        q.given = { A: q.A, b: q.b, a: q.a };
+        q.target = 'B';
+      }
+
+      currentQuestion = q;
+      renderQuestionUI();
+      drawTriangle();
+    }
+
+    function renderQuestionUI() {
+      const q = currentQuestion;
+      const typeBadge = document.getElementById('questionTypeBadge');
+      const prompt = document.getElementById('questionPrompt');
+      
+      const typeNames = {
+        'AAS': '題型：AAS (角角邊)',
+        'ASA': '題型：ASA (角邊角)',
+        'SAS': '題型：SAS (邊角邊)',
+        'ASS': '題型：ASS / SSA (邊邊角)'
+      };
+      typeBadge.innerText = typeNames[q.type];
+
+      if (q.target === 'B' && q.type === 'ASS') {
+        prompt.innerText = `求角 B 的度數（答案請精準保留 3 位有效數字）。`;
+      } else {
+        prompt.innerText = `求未知邊 ${q.target} 的長度（答案請精準保留 3 位有效數字）。`;
+      }
+    }
+
+    function selectMethod(method) {
+      selectedMethod = method;
+      const isCorrect = (method === currentQuestion.method);
+      const fb = document.getElementById('step1Feedback');
+
+      if (isCorrect) {
+        fb.innerHTML = `<span class="text-emerald-400">✅ 正確選擇！</span>`;
+      } else {
+        fb.innerHTML = `<span class="text-rose-400">❌ 選擇錯誤，請重新思考。</span>`;
+      }
+
+      ['btnSine', 'btnCosine'].forEach(id => {
+        document.getElementById(id).className = "btn-action bg-slate-800 hover:bg-blue-700/50 border border-slate-600 rounded-xl py-3 text-lg font-bold text-slate-200";
+      });
+
+      if (method === 'SINE') {
+        document.getElementById('btnSine').className = `btn-action ${isCorrect ? 'bg-emerald-600 border-emerald-400' : 'bg-rose-600 border-rose-400'} border rounded-xl py-3 text-lg font-bold text-white shadow-lg`;
+      } else if (method === 'COSINE') {
+        document.getElementById('btnCosine').className = `btn-action ${isCorrect ? 'bg-emerald-600 border-emerald-400' : 'bg-rose-600 border-rose-400'} border rounded-xl py-3 text-lg font-bold text-white shadow-lg`;
+      }
+
+      document.getElementById('step2Container').classList.remove('opacity-50', 'pointer-events-none');
+      document.getElementById('step3Container').classList.remove('opacity-50', 'pointer-events-none');
+
+      renderStep2And3Inputs();
+    }
+
+    function renderStep2And3Inputs() {
+      const eqArea = document.getElementById('equationInputArea');
+      const finalArea = document.getElementById('finalAnswerInputs');
+      eqArea.innerHTML = '';
+      finalArea.innerHTML = '';
+
+      if (selectedMethod === 'SINE') {
+        eqArea.innerHTML = `
+          <div class="flex items-center justify-center gap-3 text-xl font-bold">
+            <div class="flex flex-col items-center">
+              <input type="text" id="eq1" onfocus="activeInputId='eq1'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-32 text-slate-100" placeholder="例: sin 30°">
+              <div class="w-full h-0.5 bg-slate-500 my-1"></div>
+              <input type="text" id="eq2" onfocus="activeInputId='eq2'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-32 text-slate-100" placeholder="例: 7">
+            </div>
+            <span class="text-2xl font-bold">=</span>
+            <div class="flex flex-col items-center">
+              <input type="text" id="eq3" onfocus="activeInputId='eq3'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-32 text-slate-100" placeholder="例: sin B">
+              <div class="w-full h-0.5 bg-slate-500 my-1"></div>
+              <input type="text" id="eq4" onfocus="activeInputId='eq4'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-32 text-slate-100" placeholder="例: 8">
+            </div>
+          </div>
+        `;
+      } else if (selectedMethod === 'COSINE') {
+        eqArea.innerHTML = `
+          <div class="flex items-center justify-center gap-2 text-xl font-bold flex-wrap">
+            <input type="text" id="eqCosLHS" onfocus="activeInputId='eqCosLHS'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-24 text-slate-100" placeholder="a²">
+            <span>=</span>
+            <input type="text" id="eqCosRHS" onfocus="activeInputId='eqCosRHS'" class="input-box bg-slate-950 border border-slate-600 rounded-lg p-2 w-80 text-slate-100" placeholder="b² + c² - 2bc cos(A)">
+          </div>
+        `;
+      }
+
+      setTimeout(() => {
+        eqArea.querySelectorAll('input').forEach(input => {
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') verifyEquation();
+          });
+        });
+      }, 50);
+
+      if (currentQuestion.type === 'ASS' && selectedMethod === 'SINE') {
+        finalArea.innerHTML = `
+          <div class="flex items-center gap-4 flex-wrap">
+            <label class="font-bold text-lg">答案數量：</label>
+            <select id="solCountSelect" class="bg-slate-950 border border-slate-600 rounded-xl p-2.5 text-lg font-bold">
+              <option value="1" ${currentQuestion.solutionsCount === 1 ? 'selected' : ''}>1 個解</option>
+              <option value="2" ${currentQuestion.solutionsCount === 2 ? 'selected' : ''}>2 個解</option>
+            </select>
+          </div>
+          <div id="assValueInputs" class="flex items-center gap-4 mt-2 flex-wrap">
+            <div>
+              <span class="font-bold text-lg">∠B₁ = </span>
+              <input type="number" step="any" id="ansVal1" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-36 text-slate-100" placeholder="3位有效數字"> °
+            </div>
+            <div id="ansVal2Container" style="display: ${currentQuestion.solutionsCount === 2 ? 'inline-block' : 'none'};">
+              <span class="font-bold text-lg">∠B₂ = </span>
+              <input type="number" step="any" id="ansVal2" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-36 text-slate-100" placeholder="3位有效數字"> °
+            </div>
+          </div>
+        `;
+
+        document.getElementById('solCountSelect').addEventListener('change', (e) => {
+          const val = e.target.value;
+          document.getElementById('ansVal2Container').style.display = val === '2' ? 'inline-block' : 'none';
+        });
+      } else {
+        finalArea.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="font-bold text-xl">${currentQuestion.target} = </span>
+            <input type="number" step="any" id="ansVal1" class="input-box bg-slate-950 border border-slate-600 rounded-xl p-2.5 w-44 text-slate-100" placeholder="3位有效數字">
+          </div>
+        `;
+      }
+
+      setTimeout(() => {
+        finalArea.querySelectorAll('input').forEach(input => {
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+          });
+        });
+      }, 50);
+    }
+
+    function extractNumbers(str) {
+      const matches = str.match(/\d+(\.\d+)?/g);
+      return matches ? matches.map(Number) : [];
+    }
+
+    function verifyEquation() {
+      const fb = document.getElementById('step2Feedback');
+      const q = currentQuestion;
+      
+      let validNumbers = [];
+      if (q.given.a) validNumbers.push(q.given.a);
+      if (q.given.b) validNumbers.push(q.given.b);
+      if (q.given.c) validNumbers.push(q.given.c);
+      if (q.given.A) validNumbers.push(q.given.A);
+      if (q.given.B) validNumbers.push(q.given.B);
+      if (q.given.C) validNumbers.push(q.given.C);
+      if (q.C) validNumbers.push(q.C);
+
+      if (selectedMethod === 'SINE') {
+        const e1 = document.getElementById('eq1')?.value.trim() || '';
+        const e2 = document.getElementById('eq2')?.value.trim() || '';
+        const e3 = document.getElementById('eq3')?.value.trim() || '';
+        const e4 = document.getElementById('eq4')?.value.trim() || '';
+
+        if (!e1 && !e2 && !e3 && !e4) {
+          fb.innerHTML = `<span class="text-slate-400">💡 步驟 2 為選填項目。</span>`;
+          return;
+        }
+
+        if (!e1 || !e2 || !e3 || !e4) {
+          fb.innerHTML = `<span class="text-rose-400">⚠️ 若要填寫，四個格子均需填滿。</span>`;
+          return;
+        }
+
+        const allText = e1 + e2 + e3 + e4;
+        if (/sin|cos/i.test(allText) && /\d+/.test(allText) && !/°/.test(allText)) {
+          fb.innerHTML = `<span class="text-rose-400">❌ 角度數值後方必須加上度數符號 (°)！</span>`;
+          return;
+        }
+
+        const usedNums = [...extractNumbers(e1), ...extractNumbers(e2), ...extractNumbers(e3), ...extractNumbers(e4)];
+        const hasValidNum = usedNums.some(n => validNumbers.includes(n));
+
+        const hasSinTop = e1.includes('sin') && e3.includes('sin');
+        const hasSinBottom = e2.includes('sin') && e4.includes('sin');
+
+        if ((hasSinTop || hasSinBottom) && hasValidNum) {
+          fb.innerHTML = `<span class="text-emerald-400">✅ 正弦對應結構與數據正確！</span>`;
+        } else {
+          fb.innerHTML = `<span class="text-amber-400">💡 提示：請檢查正弦對應比例及已知數據是否正確。</span>`;
+        }
+      } else if (selectedMethod === 'COSINE') {
+        const lhs = document.getElementById('eqCosLHS')?.value.trim() || '';
+        const rhs = document.getElementById('eqCosRHS')?.value.trim() || '';
+
+        if (!lhs && !rhs) {
+          fb.innerHTML = `<span class="text-slate-400">💡 步驟 2 為選填項目。</span>`;
+          return;
+        }
+
+        if (!lhs || !rhs) {
+          fb.innerHTML = `<span class="text-rose-400">⚠️ 請完整填寫等式左右兩邊。</span>`;
+          return;
+        }
+
+        const allText = lhs + rhs;
+        if (/sin|cos/i.test(allText) && /\d+/.test(allText) && !/°/.test(allText)) {
+          fb.innerHTML = `<span class="text-rose-400">❌ 角度數值後方必須加上度數符號 (°)！</span>`;
+          return;
+        }
+
+        const usedNums = [...extractNumbers(lhs), ...extractNumbers(rhs)];
+        const hasValidNum = usedNums.some(n => validNumbers.includes(n));
+
+        if (rhs.includes('cos') && (lhs.includes('²') || lhs.includes('^2') || rhs.includes('²') || rhs.includes('^2')) && hasValidNum) {
+          fb.innerHTML = `<span class="text-emerald-400">✅ 餘弦結構與數據正確！</span>`;
+        } else {
+          fb.innerHTML = `<span class="text-amber-400">💡 提示：請確保包含平方 (²) 及正確的已知數據。</span>`;
+        }
+      }
+    }
+
+    function checkAnswer() {
+      const q = currentQuestion;
+      const feedback = document.getElementById('feedbackArea');
+      feedback.classList.remove('hidden', 'bg-emerald-950/80', 'border-emerald-600', 'bg-rose-950/80', 'border-rose-600');
+
+      let isMethodCorrect = (selectedMethod === q.method);
+      if (!selectedMethod) {
+        feedback.classList.add('bg-rose-950/80', 'border-rose-600', 'text-rose-200');
+        feedback.innerHTML = `
+          <div class="font-bold text-2xl mb-1 flex items-center gap-2">⚠️ 請先選擇適用的定理！</div>
+        `;
+        return;
+      }
+
+      // 檢查數值是否精準符合 3 位有效數字
+      let isValCorrect = false;
+      if (q.type === 'ASS' && q.method === 'SINE') {
+        const count = parseInt(document.getElementById('solCountSelect')?.value || '1');
+        const v1 = parseFloat(document.getElementById('ansVal1')?.value || '0');
+        const v2 = parseFloat(document.getElementById('ansVal2')?.value || '0');
+
+        const userV1 = roundToSigFigs(v1, 3);
+        const userV2 = roundToSigFigs(v2, 3);
+
+        if (q.solutionsCount === 1) {
+          isValCorrect = (count === 1 && userV1 === q.B1);
+        } else if (q.solutionsCount === 2) {
+          isValCorrect = (count === 2 && userV1 === q.B1 && userV2 === q.B2);
+        }
+      } else {
+        const v1 = parseFloat(document.getElementById('ansVal1')?.value || '0');
+        const userV1 = roundToSigFigs(v1, 3);
+        isValCorrect = (userV1 === q.targetVal);
+      }
+
+      if (isMethodCorrect && isValCorrect) {
+        score += 10;
+        document.getElementById('scoreDisplay').innerText = score;
+        feedback.classList.add('bg-emerald-950/80', 'border-emerald-600', 'text-emerald-200');
+        feedback.innerHTML = `
+          <div class="font-bold text-2xl mb-2 flex items-center gap-2">🎉 完全正確！(+10 分)</div>
+          <div>你的最終計算（精準保留至 3 位有效數字）正確無誤！</div>
+        `;
+      } else {
+        feedback.classList.add('bg-rose-950/80', 'border-rose-600', 'text-rose-200');
+        feedback.innerHTML = `
+          <div class="font-bold text-2xl mb-2 flex items-center gap-2">❌ 答案有誤（請確認數值已精準計算並保留至 3 位有效數字）：</div>
+          <div class="mt-2 text-base leading-relaxed" id="solutionDetails"></div>
+        `;
+        renderSolutionDetails(q);
+      }
+    }
+
+    function renderSolutionDetails(q) {
+      const el = document.getElementById('solutionDetails');
+      let html = `<p class="mb-2"><strong>正確公式定理：</strong> ${q.method === 'SINE' ? '正弦定理 (Sine Law)' : '餘弦定理 (Cosine Law)'}</p>`;
+
+      if (q.type === 'ASS') {
+        if (q.solutionsCount === 1) {
+          html += `<p>因為 $a \\ge b$ (${q.given.a} $\\ge$ ${q.given.b})，只有一個有效三角形。</p>`;
+          html += `<p>由正弦定理計算得 $\\angle B \\approx ${q.B1}^\\circ$（3位有效數字）。</p>`;
+        } else {
+          html += `<p>存在雙解（銳角及鈍角）：</p>`;
+          html += `<p>1. $\\angle B_1 \\approx ${q.B1}^\\circ$</p>`;
+          html += `<p>2. $\\angle B_2 = 180^\\circ - ${q.B1}^\\circ \\approx ${q.B2}^\\circ$</p>`;
+        }
+      } else if (q.method === 'SINE') {
+        html += `<p>公式算式：$\\frac{${q.target}}{\\sin(\\text{對角})} = \\frac{\\text{已知邊}}{\\sin(\\text{已知角})}$</p>`;
+        html += `<p>正確答案：<strong>${q.target} = ${q.targetVal}</strong>（3位有效數字）</p>`;
+      } else if (q.method === 'COSINE') {
+        html += `<p>公式算式：$a^2 = ${q.given.b}^2 + ${q.given.c}^2 - 2(${q.given.b})(${q.given.c})\\cos(${q.given.A}^\\circ)$</p>`;
+        html += `<p>正確答案：<strong>a = ${q.targetVal}</strong>（3位有效數字）</p>`;
+      }
+
+      el.innerHTML = html;
+
+      if (window.renderMathInElement) {
+        renderMathInElement(el, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ]
+        });
+      }
+    }
+
+    function drawTriangle() {
+      const canvas = document.getElementById('triangleCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const q = currentQuestion;
+      const g = q.given;
+
+      let drawA = g.A || 50;
+      let drawB = g.B || 60;
+      if (q.type === 'SAS') drawB = 60;
+      if (q.type === 'ASS') drawB = 55;
+
+      const radA = degToRad(drawA);
+      const radB = degToRad(drawB);
+      const radC = Math.PI - radA - radB;
+
+      const c_draw = 200;
+      const b_draw = c_draw * Math.sin(radB) / Math.sin(radC);
+
+      const pA = { x: 70, y: 300 };
+      const pB = { x: pA.x + c_draw, y: 300 };
+      const pC = {
+        x: pA.x + b_draw * Math.cos(radA),
+        y: pA.y - b_draw * Math.sin(radA)
+      };
+
+      ctx.beginPath();
+      ctx.moveTo(pA.x, pA.y);
+      ctx.lineTo(pB.x, pB.y);
+      ctx.lineTo(pC.x, pC.y);
+      ctx.closePath();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#60a5fa';
+      ctx.fillStyle = 'rgba(30, 58, 138, 0.2)';
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillText('A', pA.x - 25, pA.y + 10);
+      ctx.fillText('B', pB.x + 10, pB.y + 10);
+      ctx.fillText('C', pC.x - 5, pC.y - 15);
+
+      ctx.font = 'bold 18px sans-serif';
+
+      const midAB = { x: (pA.x + pB.x) / 2 - 20, y: pA.y + 25 };
+      const midBC = { x: (pB.x + pC.x) / 2 + 15, y: (pB.y + pC.y) / 2 };
+      const midAC = { x: (pA.x + pC.x) / 2 - 35, y: (pA.y + pC.y) / 2 };
+
+      ctx.fillStyle = '#f59e0b';
+      if (g.a) ctx.fillText(`a = ${g.a}`, midBC.x, midBC.y);
+      else if (q.target === 'a') ctx.fillText(`a = ?`, midBC.x, midBC.y);
+
+      if (g.b) ctx.fillText(`b = ${g.b}`, midAC.x, midAC.y);
+      else if (q.target === 'b') ctx.fillText(`b = ?`, midAC.x, midAC.y);
+
+      if (g.c) ctx.fillText(`c = ${g.c}`, midAB.x, midAB.y);
+      else if (q.target === 'c') ctx.fillText(`c = ?`, midAB.x, midAB.y);
+
+      ctx.fillStyle = '#38bdf8';
+      if (g.A) ctx.fillText(`${g.A}°`, pA.x + 30, pA.y - 10);
+      else if (q.target === 'A') ctx.fillText(`∠A = ?`, pA.x + 30, pA.y - 10);
+
+      if (g.B) ctx.fillText(`${g.B}°`, pB.x - 50, pB.y - 10);
+      else if (q.target === 'B') ctx.fillText(`∠B = ?`, pB.x - 60, pB.y - 10);
+
+      if (g.C) ctx.fillText(`${g.C}°`, pC.x - 15, pC.y + 35);
+      else if (q.target === 'C') ctx.fillText(`∠C = ?`, pC.x - 15, pC.y + 35);
+    }
+  </script>
+</body>
+</html>
